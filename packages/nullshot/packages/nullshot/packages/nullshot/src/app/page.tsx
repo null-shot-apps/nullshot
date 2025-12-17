@@ -57,7 +57,8 @@ export default function TokenTracker() {
         total_supply: 0, // DexScreener doesn't provide this
         last_updated: new Date().toISOString()
       });
-    } catch {
+    } catch (error) {
+      console.error('Error fetching token data:', error);
       setError('Unable to fetch token data. Please check the contract address.');
     } finally {
       setLoading(false);
@@ -214,6 +215,7 @@ export default function TokenTracker() {
     </div>
   );
 }
+
 
 
 
