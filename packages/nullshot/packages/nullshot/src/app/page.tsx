@@ -35,7 +35,7 @@ export default function TokenTracker() {
         throw new Error('Failed to fetch token data');
       }
       
-      const data = await response.json();
+      const data = await response.json() as { pairs?: any[] };
       
       if (!data.pairs || data.pairs.length === 0) {
         throw new Error('No trading pairs found for this token');
@@ -57,9 +57,8 @@ export default function TokenTracker() {
         total_supply: 0, // DexScreener doesn't provide this
         last_updated: new Date().toISOString()
       });
-    } catch (err) {
+    } catch {
       setError('Unable to fetch token data. Please check the contract address.');
-      console.error('Error fetching token data:', err);
     } finally {
       setLoading(false);
     }
@@ -215,6 +214,8 @@ export default function TokenTracker() {
     </div>
   );
 }
+
+
 
 
 
