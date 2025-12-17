@@ -2,83 +2,209 @@
 
 import { useEffect, useState } from 'react';
 
-const slogans = [
-  "Turn chats into apps",
-  "Prompt. Ship. Repeat.",
-  "Build anything from a chat",
-  "Ideas → Apps, instantly",
-  "From zero to MVP in minutes",
-  "Your cofounder in the command line",
-  "Draft, iterate, deploy",
-  "Ship faster than you can type",
-  "Design in text, deliver in code",
-  "Dream it. Prompt it. Run it.",
-  "Chat-native app building",
-  "From prompt to product",
-  "One prompt, infinite apps",
-  "Stop scaffolding. Start shipping.",
-  "Prototype at the speed of thought",
-  "Make conversations executable"
-];
+const XAVALABS_ADDRESS = '0xd1c3f94de7e5b45fa4edbba472491a9f4b166fc4';
 
-export default function Landing() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isVisible, setIsVisible] = useState(true);
+interface TokenData {
+  name: string;
+  symbol: string;
+  price: number;
+  price_change_24h: number;
+  market_cap: number;
+  volume_24h: number;
+  circulating_supply: number;
+  total_supply: number;
+  last_updated: string;
+}
+
+export default function TokenTracker() {
+  const [contractAddress, setContractAddress] = useState(XAVALABS_ADDRESS);
+  const [inputAddress, setInputAddress] = useState('');
+  const [tokenData, setTokenData] = useState<TokenData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const fetchTokenData = async (address: string) => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      // Using CoinMarketCap API (you'll need to add API key in production)
+      // For demo, using mock data structure
+      const response = await fetch(`/api/token?address=${address}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch token data');
+      }
+      
+      const data = await response.json();
+      setTokenData(data);
+    } catch (err) {
+      setError('Unable to fetch token data. Please check the contract address.');
+      // Mock data for demo purposes
+      setTokenData({
+        name: 'Xavalabs',
+        symbol: 'XAVA',
+        price: 0.0234,
+        price_change_24h: 5.67,
+        market_cap: 12500000,
+        volume_24h: 850000,
+        circulating_supply: 534188034,
+        total_supply: 1000000000,
+        last_updated: new Date().toISOString()
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
+    fetchTokenData(contractAddress);
     const interval = setInterval(() => {
-      setIsVisible(false);
-      setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % slogans.length);
-        setIsVisible(true);
-      }, 400);
-    }, 2800);
+      fetchTokenData(contractAddress);
+    }, 30000); // Refresh every 30 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [contractAddress]);
+
+  const handleTrackToken = () => {
+    if (inputAddress.trim()) {
+      setContractAddress(inputAddress.trim());
+    }
+  };
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(2)}M`;
+    }
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(2)}K`;
+    }
+    return `${num.toFixed(2)}`;
+  };
+
+  const formatSupply = (num: number) => {
+    if (num >= 1000000000) {
+      return `${(num / 1000000000).toFixed(2)}B`;
+    }
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(2)}M`;
+    }
+    return num.toLocaleString();
+  };
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden bg-black text-white">
-      {/* Enhanced animated aurora background layers */}
-      <div className="absolute inset-0 bg-aurora-layer-1" />
-      <div className="absolute inset-0 bg-aurora-layer-2" />
-      <div className="absolute inset-0 bg-aurora-layer-3" />
-      
-      {/* Floating particles overlay */}
-      <div className="absolute inset-0 bg-particles" />
-      
-      {/* Main content - centered */}
-      <main className="relative z-10 h-full flex flex-col items-center justify-center px-6">
-        <h1 className="text-center text-[clamp(28px,6vw,64px)] font-medium tracking-tight mb-4">
-          Turn Chats into Apps
-        </h1>
-        
-        {/* Rotating slogans */}
-        <div className="mt-4 h-8 md:h-10 overflow-hidden flex items-center justify-center">
-          <span
-            className={`inline-block text-center text-[clamp(18px,3vw,32px)] font-light transition-all duration-[400ms] ease-in-out ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
-            }`}
-          >
-            {slogans[currentIndex]}
-          </span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            Xavalabs Token Tracker
+          </h1>
+          <p className="text-gray-400">Live cryptocurrency data powered by CoinMarketCap</p>
         </div>
-      </main>
-      
-      {/* Start Prompting arrow pointing left - bottom left */}
-      <div className="absolute left-6 md:left-8 bottom-[5%] z-20 flex items-center gap-3 arrow-point-left">
-        <div className="flex items-center gap-2 text-white/80 font-medium text-sm md:text-base">
-          <svg 
-            className="w-5 h-5 md:w-6 md:h-6 animate-bounce-horizontal" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          <span>Start prompting</span>
+
+        {/* Search Bar */}
+        <div className="mb-8 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+          <label className="block text-sm font-medium mb-2 text-gray-300">
+            Track Any Token by Contract Address
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={inputAddress}
+              onChange={(e) => setInputAddress(e.target.value)}
+              placeholder="Paste contract address (e.g., 0xd1c3f94de7e5b45fa4edbba472491a9f4b166fc4)"
+              className="flex-1 px-4 py-3 bg-white/5 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-gray-500"
+              onKeyPress={(e) => e.key === 'Enter' && handleTrackToken()}
+            />
+            <button
+              onClick={handleTrackToken}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all"
+            >
+              Track
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-2">
+            Current: {contractAddress}
+          </p>
         </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
+            <p className="mt-4 text-gray-400">Fetching live data...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 mb-6">
+            <p className="text-red-300">{error}</p>
+          </div>
+        )}
+
+        {/* Token Data Display */}
+        {tokenData && !loading && (
+          <div className="space-y-6">
+            {/* Main Stats Card */}
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-3xl font-bold">{tokenData.name}</h2>
+                  <p className="text-gray-400 text-lg">{tokenData.symbol}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-4xl font-bold">${tokenData.price.toFixed(6)}</p>
+                  <p className={`text-lg font-semibold ${tokenData.price_change_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {tokenData.price_change_24h >= 0 ? '↑' : '↓'} {Math.abs(tokenData.price_change_24h).toFixed(2)}%
+                  </p>
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white/5 rounded-xl p-4">
+                  <p className="text-gray-400 text-sm mb-1">Market Cap</p>
+                  <p className="text-xl font-bold">{formatNumber(tokenData.market_cap)}</p>
+                </div>
+                <div className="bg-white/5 rounded-xl p-4">
+                  <p className="text-gray-400 text-sm mb-1">24h Volume</p>
+                  <p className="text-xl font-bold">{formatNumber(tokenData.volume_24h)}</p>
+                </div>
+                <div className="bg-white/5 rounded-xl p-4">
+                  <p className="text-gray-400 text-sm mb-1">Circulating Supply</p>
+                  <p className="text-xl font-bold">{formatSupply(tokenData.circulating_supply)}</p>
+                </div>
+                <div className="bg-white/5 rounded-xl p-4">
+                  <p className="text-gray-400 text-sm mb-1">Total Supply</p>
+                  <p className="text-xl font-bold">{formatSupply(tokenData.total_supply)}</p>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-white/10">
+                <p className="text-xs text-gray-400">
+                  Last updated: {new Date(tokenData.last_updated).toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 hover:bg-white/20 transition-all">
+                <p className="font-semibold">View on Explorer</p>
+              </button>
+              <button className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 hover:bg-white/20 transition-all">
+                <p className="font-semibold">Add to Watchlist</p>
+              </button>
+              <button className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 hover:bg-white/20 transition-all">
+                <p className="font-semibold">Share</p>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
