@@ -13,6 +13,7 @@ interface TokenData {
   volume_24h: number;
   circulating_supply: number;
   total_supply: number;
+  holders: number;
   last_updated: string;
 }
 
@@ -50,6 +51,7 @@ export default function TokenTracker() {
         volume_24h: 850000,
         circulating_supply: 534188034,
         total_supply: 1000000000,
+        holders: 0,
         last_updated: new Date().toISOString()
       });
     } finally {
@@ -163,7 +165,7 @@ export default function TokenTracker() {
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="bg-white/5 rounded-xl p-4">
                   <p className="text-gray-400 text-sm mb-1">Market Cap</p>
                   <p className="text-xl font-bold">{formatNumber(tokenData.market_cap)}</p>
@@ -179,6 +181,10 @@ export default function TokenTracker() {
                 <div className="bg-white/5 rounded-xl p-4">
                   <p className="text-gray-400 text-sm mb-1">Total Supply</p>
                   <p className="text-xl font-bold">{formatSupply(tokenData.total_supply)}</p>
+                </div>
+                <div className="bg-white/5 rounded-xl p-4">
+                  <p className="text-gray-400 text-sm mb-1">Holders</p>
+                  <p className="text-xl font-bold">{tokenData.holders > 0 ? tokenData.holders.toLocaleString() : 'N/A'}</p>
                 </div>
               </div>
 
@@ -207,4 +213,7 @@ export default function TokenTracker() {
     </div>
   );
 }
+
+
+
 

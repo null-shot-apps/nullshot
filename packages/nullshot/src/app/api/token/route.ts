@@ -21,6 +21,21 @@ export async function GET(request: NextRequest) {
 
       if (geckoResponse.ok) {
         const geckoData = await geckoResponse.json();
+        
+        // Fetch holder count from Snowtrace
+        let holders = 0;
+        try {
+          const snowtraceResponse = await fetch(
+            `https://api.snowtrace.io/api?module=token&action=tokenholderlist&contractaddress=${address}&page=1&offset=1`
+          );
+          if (snowtraceResponse.ok) {
+            const snowtraceData = await snowtraceResponse.json();
+            holders = parseInt(snowtraceData.result?.[0]?.TokenHolderQuantity || '0');
+          }
+        } catch {
+          // Holder count optional
+        }
+        
         return NextResponse.json({
           name: geckoData.name || 'Unknown',
           symbol: geckoData.symbol?.toUpperCase() || 'N/A',
@@ -30,6 +45,7 @@ export async function GET(request: NextRequest) {
           volume_24h: geckoData.market_data?.total_volume?.usd || 0,
           circulating_supply: geckoData.market_data?.circulating_supply || 0,
           total_supply: geckoData.market_data?.total_supply || 0,
+          holders: holders,
           last_updated: geckoData.last_updated || new Date().toISOString(),
         });
       }
@@ -54,6 +70,20 @@ export async function GET(request: NextRequest) {
       throw new Error('No trading pairs found');
     }
 
+    // Fetch holder count from Snowtrace for DexScreener fallback
+    let holders = 0;
+    try {
+      const snowtraceResponse = await fetch(
+        `https://api.snowtrace.io/api?module=token&action=tokenholderlist&contractaddress=${address}&page=1&offset=1`
+      );
+      if (snowtraceResponse.ok) {
+        const snowtraceData = await snowtraceResponse.json();
+        holders = parseInt(snowtraceData.result?.[0]?.TokenHolderQuantity || '0');
+      }
+    } catch {
+      // Holder count optional
+    }
+    
     return NextResponse.json({
       name: pair.baseToken.name,
       symbol: pair.baseToken.symbol,
@@ -63,6 +93,7 @@ export async function GET(request: NextRequest) {
       volume_24h: parseFloat(pair.volume?.h24 || '0'),
       circulating_supply: parseFloat(pair.baseToken.circulatingSupply || '0'),
       total_supply: parseFloat(pair.baseToken.totalSupply || '0'),
+      holders: holders,
       last_updated: new Date().toISOString(),
     });
   } catch {
@@ -72,6 +103,8 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+
 
 
 
