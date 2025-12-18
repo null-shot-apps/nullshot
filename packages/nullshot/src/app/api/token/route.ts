@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
             `https://api.snowtrace.io/api?module=token&action=tokenholderlist&contractaddress=${address}&page=1&offset=1`
           );
           if (snowtraceResponse.ok) {
-            const snowtraceData = await snowtraceResponse.json();
+            const snowtraceData = await snowtraceResponse.json() as { result?: Array<{ TokenHolderQuantity?: string }> };
             holders = parseInt(snowtraceData.result?.[0]?.TokenHolderQuantity || '0');
           }
         } catch {
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
         `https://api.snowtrace.io/api?module=token&action=tokenholderlist&contractaddress=${address}&page=1&offset=1`
       );
       if (snowtraceResponse.ok) {
-        const snowtraceData = await snowtraceResponse.json();
+        const snowtraceData = await snowtraceResponse.json() as { result?: Array<{ TokenHolderQuantity?: string }> };
         holders = parseInt(snowtraceData.result?.[0]?.TokenHolderQuantity || '0');
       }
     } catch {
@@ -103,6 +103,8 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+
 
 
 
