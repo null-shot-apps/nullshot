@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       throw new Error('Failed to fetch from DexScreener');
     }
 
-    const dexData: {
+    const dexData = await dexResponse.json() as {
       pairs?: Array<{
         baseToken: {
           name: string;
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
         marketCap?: string;
         volume?: { h24?: string };
       }>;
-    } = await dexResponse.json();
+    };
     
     const pair = dexData.pairs?.[0];
     
@@ -131,6 +131,7 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 
 
 
