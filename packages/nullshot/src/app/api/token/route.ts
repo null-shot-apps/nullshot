@@ -12,38 +12,64 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // In production, you would use CoinMarketCap API with your API key
-    // const CMC_API_KEY = process.env.CMC_API_KEY;
-    // const response = await fetch(
-    //   `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?address=${address}`,
-    //   {
-    //     headers: {
-    //       'X-CMC_PRO_API_KEY': CMC_API_KEY,
-    //     },
-    //   }
-    // );
+    // Fetch from DexScreener API for real-time DEX data
+    const dexResponse = await fetch(
+      `https://api.dexscreener.com/latest/dex/tokens/${address}`,
+      { next: { revalidate: 30 } }
+    );
 
-    // For demo purposes, returning mock data
-    // In production, parse the actual API response
-    const mockData = {
-      name: 'Xavalabs',
-      symbol: 'XAVA',
-      price: 0.0234 + (Math.random() - 0.5) * 0.001,
-      price_change_24h: 5.67 + (Math.random() - 0.5) * 2,
-      market_cap: 12500000 + Math.random() * 100000,
-      volume_24h: 850000 + Math.random() * 50000,
-      circulating_supply: 534188034,
-      total_supply: 1000000000,
+    if (!dexResponse.ok) {
+      throw new Error('Failed to fetch from DexScreener');
+    }
+
+    const dexData = await dexResponse.json();
+    
+    // Get the first pair (usually the most liquid)
+    const pair = dexData.pairs?.[0];
+    
+    if (!pair) {
+      // Fallback: Fetch token info from Snowtrace API
+      const snowtraceResponse = await fetch(
+        `https://api.snowtrace.io/api?module=token&action=tokeninfo&contractaddress=${address}`
+      );
+      
+      const snowtraceData = await snowtraceResponse.json();
+      
+      if (snowtraceData.status === '1' && snowtraceData.result) {
+        const tokenInfo = snowtraceData.result[0];
+        return NextResponse.json({
+          name: tokenInfo.name || 'Unknown',
+          symbol: tokenInfo.symbol || 'N/A',
+          price: 0,
+          price_change_24h: 0,
+          market_cap: 0,
+          volume_24h: 0,
+          circulating_supply: parseInt(tokenInfo.circulatingSupply || '0') / Math.pow(10, parseInt(tokenInfo.divisor || '18')),
+          total_supply: parseInt(tokenInfo.totalSupply || '0') / Math.pow(10, parseInt(tokenInfo.divisor || '18')),
+          last_updated: new Date().toISOString(),
+        });
+      }
+      
+      throw new Error('No trading pairs found');
+    }
+
+    return NextResponse.json({
+      name: pair.baseToken.name,
+      symbol: pair.baseToken.symbol,
+      price: parseFloat(pair.priceUsd || '0'),
+      price_change_24h: parseFloat(pair.priceChange?.h24 || '0'),
+      market_cap: parseFloat(pair.marketCap || '0'),
+      volume_24h: parseFloat(pair.volume?.h24 || '0'),
+      circulating_supply: parseFloat(pair.baseToken.circulatingSupply || '0'),
+      total_supply: parseFloat(pair.baseToken.totalSupply || '0'),
       last_updated: new Date().toISOString(),
-    };
-
-    return NextResponse.json(mockData);
-  } catch (error) {
-    console.error('Error fetching token data:', error);
+    });
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch token data' },
       { status: 500 }
     );
   }
 }
+
 
