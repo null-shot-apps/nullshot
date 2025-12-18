@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       );
 
       if (geckoResponse.ok) {
-        const geckoData: GeckoData = await geckoResponse.json();
+        const geckoData = await geckoResponse.json() as GeckoData;
         
         // Fetch holder count from Snowtrace
         let holders = 0;
@@ -131,6 +131,7 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 
 
 
