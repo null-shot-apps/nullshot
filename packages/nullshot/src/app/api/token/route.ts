@@ -75,7 +75,13 @@ export async function GET(request: NextRequest) {
       throw new Error('Failed to fetch from DexScreener');
     }
 
-    const dexData = await dexResponse.json();
+    const dexData = await dexResponse.json() as { pairs?: Array<{
+      baseToken: { name: string; symbol: string; circulatingSupply?: string; totalSupply?: string };
+      priceUsd?: string;
+      priceChange?: { h24?: string };
+      marketCap?: string;
+      volume?: { h24?: string };
+    }> };
     const pair = dexData.pairs?.[0];
     
     if (!pair) {
@@ -115,6 +121,7 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 
 
 
