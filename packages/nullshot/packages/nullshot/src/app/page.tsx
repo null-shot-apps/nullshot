@@ -46,7 +46,7 @@ export default function TokenTracker() {
         (current.liquidity?.usd || 0) > (prev.liquidity?.usd || 0) ? current : prev
       );
       
-      setTokenData({
+      const newTokenData: TokenData = {
         name: mainPair.baseToken.name,
         symbol: mainPair.baseToken.symbol,
         price: parseFloat(mainPair.priceUsd || '0'),
@@ -56,7 +56,9 @@ export default function TokenTracker() {
         circulating_supply: 0, // DexScreener doesn't provide this
         total_supply: 0, // DexScreener doesn't provide this
         last_updated: new Date().toISOString()
-      });
+      };
+      
+      setTokenData(newTokenData);
     } catch {
       setError('Unable to fetch token data. Please check the contract address.');
     } finally {
@@ -214,6 +216,7 @@ export default function TokenTracker() {
     </div>
   );
 }
+
 
 
 
