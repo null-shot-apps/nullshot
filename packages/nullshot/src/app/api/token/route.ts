@@ -12,7 +12,32 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch from DexScreener API for real-time DEX data
+    // Try CoinGecko API first (free, no API key needed)
+    try {
+      const geckoResponse = await fetch(
+        `https://api.coingecko.com/api/v3/coins/avalanche-2/contract/${address}`,
+        { next: { revalidate: 30 } }
+      );
+
+      if (geckoResponse.ok) {
+        const geckoData = await geckoResponse.json();
+        return NextResponse.json({
+          name: geckoData.name || 'Unknown',
+          symbol: geckoData.symbol?.toUpperCase() || 'N/A',
+          price: geckoData.market_data?.current_price?.usd || 0,
+          price_change_24h: geckoData.market_data?.price_change_percentage_24h || 0,
+          market_cap: geckoData.market_data?.market_cap?.usd || 0,
+          volume_24h: geckoData.market_data?.total_volume?.usd || 0,
+          circulating_supply: geckoData.market_data?.circulating_supply || 0,
+          total_supply: geckoData.market_data?.total_supply || 0,
+          last_updated: geckoData.last_updated || new Date().toISOString(),
+        });
+      }
+    } catch {
+      // Continue to DexScreener fallback
+    }
+
+    // Fallback to DexScreener API
     const dexResponse = await fetch(
       `https://api.dexscreener.com/latest/dex/tokens/${address}`,
       { next: { revalidate: 30 } }
@@ -23,33 +48,9 @@ export async function GET(request: NextRequest) {
     }
 
     const dexData = await dexResponse.json();
-    
-    // Get the first pair (usually the most liquid)
     const pair = dexData.pairs?.[0];
     
     if (!pair) {
-      // Fallback: Fetch token info from Snowtrace API
-      const snowtraceResponse = await fetch(
-        `https://api.snowtrace.io/api?module=token&action=tokeninfo&contractaddress=${address}`
-      );
-      
-      const snowtraceData = await snowtraceResponse.json();
-      
-      if (snowtraceData.status === '1' && snowtraceData.result) {
-        const tokenInfo = snowtraceData.result[0];
-        return NextResponse.json({
-          name: tokenInfo.name || 'Unknown',
-          symbol: tokenInfo.symbol || 'N/A',
-          price: 0,
-          price_change_24h: 0,
-          market_cap: 0,
-          volume_24h: 0,
-          circulating_supply: parseInt(tokenInfo.circulatingSupply || '0') / Math.pow(10, parseInt(tokenInfo.divisor || '18')),
-          total_supply: parseInt(tokenInfo.totalSupply || '0') / Math.pow(10, parseInt(tokenInfo.divisor || '18')),
-          last_updated: new Date().toISOString(),
-        });
-      }
-      
       throw new Error('No trading pairs found');
     }
 
@@ -71,5 +72,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 
 
