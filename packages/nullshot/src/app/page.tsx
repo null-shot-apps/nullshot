@@ -37,7 +37,7 @@ export default function TokenTracker() {
         throw new Error('Failed to fetch token data');
       }
       
-      const data = await response.json();
+      const data = await response.json() as TokenData;
       setTokenData(data);
     } catch {
       setError('Unable to fetch token data. Please check the contract address.');
