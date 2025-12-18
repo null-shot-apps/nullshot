@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+interface GeckoData {
+  name?: string;
+  symbol?: string;
+  market_data?: {
+    current_price?: { usd?: number };
+    price_change_percentage_24h?: number;
+    market_cap?: { usd?: number };
+    total_volume?: { usd?: number };
+    total_supply?: number;
+    circulating_supply?: number;
+  };
+  last_updated?: string;
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const address = searchParams.get('address');
@@ -20,20 +34,7 @@ export async function GET(request: NextRequest) {
       );
 
       if (geckoResponse.ok) {
-        const geckoDataRaw = await geckoResponse.json();
-        const geckoData = geckoDataRaw as {
-          name?: string;
-          symbol?: string;
-          market_data?: {
-            current_price?: { usd?: number };
-            price_change_percentage_24h?: number;
-            market_cap?: { usd?: number };
-            total_volume?: { usd?: number };
-            total_supply?: number;
-            circulating_supply?: number;
-          };
-          last_updated?: string;
-        };
+        const geckoData: GeckoData = await geckoResponse.json();
         
         // Fetch holder count from Snowtrace
         let holders = 0;
@@ -130,5 +131,7 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+
 
 
