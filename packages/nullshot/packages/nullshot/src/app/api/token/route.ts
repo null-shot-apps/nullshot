@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
       );
 
       if (geckoResponse.ok) {
-        const geckoData = await geckoResponse.json() as {
+        const geckoDataRaw = await geckoResponse.json();
+        const geckoData = geckoDataRaw as {
           name?: string;
           symbol?: string;
           market_data?: {
@@ -129,4 +130,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 
