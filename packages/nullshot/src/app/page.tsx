@@ -39,7 +39,7 @@ export default function TokenTracker() {
       
       const data = await response.json();
       setTokenData(data);
-    } catch (err) {
+    } catch {
       setError('Unable to fetch token data. Please check the contract address.');
       // Mock data for demo purposes
       setTokenData({
