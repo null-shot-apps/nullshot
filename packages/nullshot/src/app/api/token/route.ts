@@ -20,7 +20,19 @@ export async function GET(request: NextRequest) {
       );
 
       if (geckoResponse.ok) {
-        const geckoData = await geckoResponse.json();
+        const geckoData = await geckoResponse.json() as {
+          name?: string;
+          symbol?: string;
+          market_data?: {
+            current_price?: { usd?: number };
+            price_change_percentage_24h?: number;
+            market_cap?: { usd?: number };
+            total_volume?: { usd?: number };
+            circulating_supply?: number;
+            total_supply?: number;
+          };
+          last_updated?: string;
+        };
         
         // Fetch holder count from Snowtrace
         let holders = 0;
@@ -103,6 +115,7 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 
 
 
